@@ -52,9 +52,13 @@ Use the following message files (read them in order):
 {message_list}
 
 Please provide your answer in the format requested in the task instructions. \
-Write your final answer to `/app/result.json` in JSON format with an "output" \
-field containing your response as a **string**. \
-Example: {{"output": "your answer here"}}.\
+You MUST write your final answer to `/app/response.txt` as plain text. \
+You MUST actually execute a command to write the file. For example: \
+  python3 -c "open('/app/response.txt','w').write('your answer here')" \
+or: \
+  cat > /app/response.txt << 'EOF'
+your answer here
+EOF\
 """
 
 DOCKERFILE_TEMPLATE = """\
@@ -166,7 +170,7 @@ def run_codex_in_docker(
         auth_json = {"OPENAI_API_KEY": api_key}
         (auth_dir / "auth.json").write_text(json.dumps(auth_json), encoding="utf-8")
 
-        # Mount /app as a writable volume so result.json is accessible after run
+        # Mount /app as a writable volume so response.txt is accessible after run
         result_dir = Path(tmpdir) / "app_output"
         result_dir.mkdir()
 
@@ -218,20 +222,17 @@ def run_codex_in_docker(
         except Exception as e:
             return None, f"Docker run error: {e}"
 
-        result_file = result_dir / "result.json"
+        result_file = result_dir / "response.txt"
         if not result_file.exists():
             stderr_tail = (stderr or "")[-300:]
             stdout_tail = (stdout or "")[-300:]
-            return None, f"result.json not written. stderr: {stderr_tail} stdout: {stdout_tail}"
+            return None, f"response.txt not written. stderr: {stderr_tail} stdout: {stdout_tail}"
 
         try:
-            result_data = json.loads(result_file.read_text(encoding="utf-8"))
-            output = result_data.get("output", "")
-            if isinstance(output, (dict, list)):
-                output = json.dumps(output)
-            return str(output), None
+            output = result_file.read_text(encoding="utf-8")
+            return output.strip(), None
         except Exception as e:
-            return None, f"Failed to parse result.json: {e}"
+            return None, f"Failed to read response.txt: {e}"
 
 
 def process_single_case(args):
