@@ -147,10 +147,12 @@ The original `infer.py` calls the OpenAI API directly. The Harbor adapter runs t
 
 | Side | Execution | Solving Rate |
 |------|-----------|-------------|
-| Original (`infer_codex.py`) | codex@0.118.0 in Docker | 6.35% ± 3.26% |
-| Harbor adapter | codex@0.118.0 in Docker | 8.90% ± 2.98% |
+| Original (`infer_codex.py`) | codex@0.118.0 in Docker | 12.00% ± 1.15% |
+| Harbor adapter | codex@0.118.0 in Docker | 10.67% ± 1.33% |
 
-Gap: 2.6pp — within variance, classified as **matching**. See [HARBOR.md](HARBOR.md) for full reproduction steps.
+Scores use `mean ± sample SEM`. Run ranges overlap (original 10-14%, Harbor 8-12%), classified as **matching** by Harbor parity criteria. See [HARBOR.md](HARBOR.md) for full reproduction steps.
+
+The parity fork keeps the original task rubrics and binary scoring formula. `eval.py` only adds more robust judge-output parsing and rubric-equivalence guidance so verbose or fenced judge responses do not fail parsing.
 
 ## ⚙️ Script Options
 
